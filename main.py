@@ -52,23 +52,23 @@ class Box:
 
 
 def gen_all_features():
-    feature2h = List(Feature2h(location.left, location.top, shape.width, shape.height)
+    feature2h = list(Feature2h(location.left, location.top, shape.width, shape.height)
                      for shape in possible_shapes(Size(height=1, width=2), WINDOW_SIZE)
                      for location in possible_locations(shape, WINDOW_SIZE))
 
-    feature2v = List(Feature2v(location.left, location.top, shape.width, shape.height)
+    feature2v = list(Feature2v(location.left, location.top, shape.width, shape.height)
                      for shape in possible_shapes(Size(height=2, width=1), WINDOW_SIZE)
                      for location in possible_locations(shape, WINDOW_SIZE))
 
-    feature3h = List(Feature3h(location.left, location.top, shape.width, shape.height)
+    feature3h = list(Feature3h(location.left, location.top, shape.width, shape.height)
                      for shape in possible_shapes(Size(height=1, width=3), WINDOW_SIZE)
                      for location in possible_locations(shape, WINDOW_SIZE))
 
-    feature3v = List(Feature3v(location.left, location.top, shape.width, shape.height)
+    feature3v = list(Feature3v(location.left, location.top, shape.width, shape.height)
                      for shape in possible_shapes(Size(height=3, width=1), WINDOW_SIZE)
                      for location in possible_locations(shape, WINDOW_SIZE))
 
-    feature4 = List(Feature4(location.left, location.top, shape.width, shape.height)
+    feature4 = list(Feature4(location.left, location.top, shape.width, shape.height)
                     for shape in possible_shapes(Size(height=2, width=2), WINDOW_SIZE)
                     for location in possible_locations(shape, WINDOW_SIZE))
     features = feature2h + feature2v + feature3h + feature3v + feature4
@@ -183,7 +183,7 @@ def run_weak_classifier(x: np.ndarray, f: clf):
     return req_weak(x, f.cl, f.cl.polarity, f.cl.theta)
 
 
-def build_weak_classifier(numf: int, xs: np.ndarray, ys: np.ndarray, features: List[Feature],ws: Optional[np.ndarray] = None):  # есть или нет, хз короче (optional)
+def build_weak_classifier(numf: int, xs: np.ndarray, ys: np.ndarray, features: list[Feature],ws: Optional[np.ndarray] = None):  # есть или нет, хз короче (optional)
     if ws is None:  # если пуста дура
         m = 0  # negative
         l = 0  # positive
@@ -276,7 +276,7 @@ def sample_data(p: int, n: int, xsf: np.ndarray, xst: np.ndarray):
     return xs, mark
 
 
-def strong_classifier(x: np.ndarray, weaks: List[clf]):
+def strong_classifier(x: np.ndarray, weaks: list[clf]):
     sum_alpha = 0
     cur_sum = 0
     for c in weaks:
@@ -286,7 +286,7 @@ def strong_classifier(x: np.ndarray, weaks: List[clf]):
         return 1.0
     else:
         return 0.0
-def render_candidates(image: Image.Image, candidates: List[tuple[int, int]], HALF_WINDOW):
+def render_candidates(image: Image.Image, candidates: list[tuple[int, int]], HALF_WINDOW):
     canvas = to_fl_array(image.copy())
     for row, col in candidates:
         canvas[row - HALF_WINDOW - 1:row + HALF_WINDOW, col - HALF_WINDOW - 1, :] = [1., 0., 0.]
@@ -294,7 +294,7 @@ def render_candidates(image: Image.Image, candidates: List[tuple[int, int]], HAL
         canvas[row - HALF_WINDOW - 1, col - HALF_WINDOW - 1:col + HALF_WINDOW, :] = [1., 0., 0.]
         canvas[row + HALF_WINDOW - 1, col - HALF_WINDOW - 1:col + HALF_WINDOW, :] = [1., 0., 0.]
     return to_im(canvas)
-def test_big_im(weaks1: List[clf], way:str):
+def test_big_im(weaks1: list[clf], way:str):
     original_image = Image.open(way)
     #s_im=original_image.copy()
     target_size = (384, 288)
