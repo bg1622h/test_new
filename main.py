@@ -183,8 +183,8 @@ def run_weak_classifier(x: np.ndarray, f: clf):
     return req_weak(x, f.cl, f.cl.polarity, f.cl.theta)
 
 
-def build_weak_classifier(numf: int, xs: np.ndarray, ys: np.ndarray, features: list[Feature],
-                          ws: Optional[np.ndarray] = None):  # есть или нет, хз короче (optional)
+def build_weak_classifier(numf: int, xs: np.ndarray, ys: np.ndarray, features: list[Feature]):  # есть или нет, хз короче (optional)
+    ws=None
     if ws is None:  # если пуста дура
         m = 0  # negative
         l = 0  # positive
