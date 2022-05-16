@@ -361,7 +361,7 @@ if __name__ == '__main__':
     xsf = np.array(xsf)
     random.seed(1337)
     np.random.seed(1337)
-    xs, mark = sample_data(500, 500, xsf, xst)
+    xs, mark = sample_data(100, 100, xsf, xst)
     # print(xs)
     # mark = np.array(mark)
     # xs = np.array(xs)
