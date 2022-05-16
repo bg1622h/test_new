@@ -276,7 +276,7 @@ def sample_data(p: int, n: int, xsf: np.ndarray, xst: np.ndarray):
     return xs, mark
 
 
-def strong_classifier(x: np.ndarray, weaks: list[clf]):
+def strong_classifier(x: np.ndarray, weaks):
     sum_alpha = 0
     cur_sum = 0
     for c in weaks:
@@ -286,44 +286,44 @@ def strong_classifier(x: np.ndarray, weaks: list[clf]):
         return 1.0
     else:
         return 0.0
-def render_candidates(image: Image.Image, candidates: list[tuple[int, int]], HALF_WINDOW):
-    canvas = to_fl_array(image.copy())
-    for row, col in candidates:
-        canvas[row - HALF_WINDOW - 1:row + HALF_WINDOW, col - HALF_WINDOW - 1, :] = [1., 0., 0.]
-        canvas[row - HALF_WINDOW - 1:row + HALF_WINDOW, col + HALF_WINDOW - 1, :] = [1., 0., 0.]
-        canvas[row - HALF_WINDOW - 1, col - HALF_WINDOW - 1:col + HALF_WINDOW, :] = [1., 0., 0.]
-        canvas[row + HALF_WINDOW - 1, col - HALF_WINDOW - 1:col + HALF_WINDOW, :] = [1., 0., 0.]
-    return to_im(canvas)
-def test_big_im(weaks1: list[clf], way:str):
-    original_image = Image.open(way)
-    #s_im=original_image.copy()
-    target_size = (384, 288)
-    original_image.thumbnail(target_size, Image.Resampling.LANCZOS)
-    s_im=original_image
-    original=to_fl_array(original_image)
-    grayscale=gleam(original)
-    to_im(grayscale).show()
-    integral=to_integral(grayscale)
-    #to_im(integral).show()
-    rows,cols=integral.shape[0:2]
-    HALF_WINDOW = WINDOW_SIZE // 2
-    face_position=[]
-    for row in range(HALF_WINDOW + 1, rows - HALF_WINDOW):
-        for col in range(HALF_WINDOW + 1, cols - HALF_WINDOW):
-            window = integral[row - HALF_WINDOW - 1:row + HALF_WINDOW, col - HALF_WINDOW - 1:col + HALF_WINDOW]
-            probably_face = strong_classifier(window,weaks1)
-            if probably_face == 0:
-                continue
-            #probably_face = strong_classifier(window,weaks2)
-            #if probably_face == 0:
-            #    continue
-            #probably_face = strong_classifier(window, weaks3)
-            #if probably_face == 0:
-            #    continue
-            face_position.append((row, col))
-
-    render_candidates(s_im,face_position,HALF_WINDOW).show()
-    return len(face_position)
+#def render_candidates(image: Image.Image, candidates: list[tuple[int, int]], HALF_WINDOW):
+#    canvas = to_fl_array(image.copy())
+#    for row, col in candidates:
+#        canvas[row - HALF_WINDOW - 1:row + HALF_WINDOW, col - HALF_WINDOW - 1, :] = [1., 0., 0.]
+#        canvas[row - HALF_WINDOW - 1:row + HALF_WINDOW, col + HALF_WINDOW - 1, :] = [1., 0., 0.]
+#        canvas[row - HALF_WINDOW - 1, col - HALF_WINDOW - 1:col + HALF_WINDOW, :] = [1., 0., 0.]
+#        canvas[row + HALF_WINDOW - 1, col - HALF_WINDOW - 1:col + HALF_WINDOW, :] = [1., 0., 0.]
+#    return to_im(canvas)
+#def test_big_im(weaks1: list[clf], way:str):
+#    original_image = Image.open(way)
+#    #s_im=original_image.copy()
+#    target_size = (384, 288)
+#    original_image.thumbnail(target_size, Image.Resampling.LANCZOS)
+#    s_im=original_image
+#    original=to_fl_array(original_image)
+#    grayscale=gleam(original)
+#    to_im(grayscale).show()
+#    integral=to_integral(grayscale)
+#    #to_im(integral).show()
+#    rows,cols=integral.shape[0:2]
+#    HALF_WINDOW = WINDOW_SIZE // 2
+#    face_position=[]
+#    for row in range(HALF_WINDOW + 1, rows - HALF_WINDOW):
+#        for col in range(HALF_WINDOW + 1, cols - HALF_WINDOW):
+#            window = integral[row - HALF_WINDOW - 1:row + HALF_WINDOW, col - HALF_WINDOW - 1:col + HALF_WINDOW]
+#            probably_face = strong_classifier(window,weaks1)
+#            if probably_face == 0:
+#                continue
+#            #probably_face = strong_classifier(window,weaks2)
+#            #if probably_face == 0:
+#            #    continue
+#            #probably_face = strong_classifier(window, weaks3)
+#            #if probably_face == 0:
+#            #    continue
+#            face_position.append((row, col))
+#
+#    render_candidates(s_im,face_position,HALF_WINDOW).show()
+#    return len(face_position)
 def obj_json(cur : clf):
     return {
         "theta": cur.cl.theta,
