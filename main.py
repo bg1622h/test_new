@@ -433,4 +433,4 @@ if __name__ == '__main__':
     #https://ru.stackoverflow.com/questions/1352814/typeerror-type-object-is-not-subscriptableprint("first stage: {0} found".format(test_big_im(weak_classifier2, "weak_learning/bigtestim.png")))
 
 # насчёт sample_data - тупо 1000 рандомов достаём, хехехее, я понял
-# ебать я дебил, в интегралку даже не перевёл
+# ебать я дебил, в интегралку даже не перевёл#
