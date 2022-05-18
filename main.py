@@ -359,9 +359,16 @@ if __name__ == '__main__':
             markglob.append(0)
     xst = np.array(xst)
     xsf = np.array(xsf)
+    # получаем тип отклонение
+    random.seed(324960)
+    xs,tr=sample_data(100,100,xsf,xst)
+    sample_mean=xs.mean()
+    sample_std=xs.std()
+    del xs
+    del tr
     random.seed(1337)
     np.random.seed(1337)
-    xs, mark = sample_data(1000, 1000, xsf, xst)
+    xs, mark = sample_data(100, 100, xsf, xst)
     # print(xs)
     # mark = np.array(mark)
     # xs = np.array(xs)
