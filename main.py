@@ -84,8 +84,8 @@ def gen_all_features():
 
 # append если группой то массив добавит в массив append([1,2]) [1,2,[1,2]]
 # extend одиночно добавляет эелменты ([1,2]) [1,2,1,2]
-def normalize(im: np.ndarray, mean, std):
-    return (im - mean) / std
+#def normalize(im: np.ndarray, mean, std):
+#    return (im - mean) / std
 
 
 def get_idx(weight: np.ndarray, mark: np.ndarray, res: np.ndarray):
@@ -294,11 +294,12 @@ def strong_classifier(x: np.ndarray, weaks):
 #        canvas[row - HALF_WINDOW - 1, col - HALF_WINDOW - 1:col + HALF_WINDOW, :] = [1., 0., 0.]
 #        canvas[row + HALF_WINDOW - 1, col - HALF_WINDOW - 1:col + HALF_WINDOW, :] = [1., 0., 0.]
 #    return to_im(canvas)
-#def test_big_im(weaks1: list[clf], way:str):
+#def test_big_im(weaks1: list[clf], weaks2: list[clf], weaks3: list[clf], way:str):
 #    original_image = Image.open(way)
 #    #s_im=original_image.copy()
 #    target_size = (384, 288)
-#    original_image.thumbnail(target_size, Image.Resampling.LANCZOS)
+#    #target_size = (100, 100)
+#    original_image.thumbnail(target_size, Image.ANTIALIAS)
 #    s_im=original_image
 #    original=to_fl_array(original_image)
 #    grayscale=gleam(original)
@@ -314,12 +315,12 @@ def strong_classifier(x: np.ndarray, weaks):
 #            probably_face = strong_classifier(window,weaks1)
 #            if probably_face == 0:
 #                continue
-#            #probably_face = strong_classifier(window,weaks2)
-#            #if probably_face == 0:
-#            #    continue
-#            #probably_face = strong_classifier(window, weaks3)
-#            #if probably_face == 0:
-#            #    continue
+#            probably_face = strong_classifier(window,weaks2)
+#            if probably_face == 0:
+#                continue
+#            probably_face = strong_classifier(window, weaks3)
+#            if probably_face == 0:
+#                continue
 #            face_position.append((row, col))
 #
 #    render_candidates(s_im,face_position,HALF_WINDOW).show()
@@ -339,8 +340,25 @@ def obj_json(cur : clf):
             "coeffs": cur.cl.coeffs
         }
     }
+def handle(d):
+    nw=Feature(d['feature']['x'],d['feature']['y'],d['feature']['width'],d['feature']['height'])
+    nw.addx_x(d['feature']['coords_x'])
+    nw.addx_y(d['feature']['coords_y'])
+    nw.addx_c(d['feature']['coeffs'])
+    return clf(nw,d['theta'],d['polarity'],d['alpha'])
+def init_cl(s):
+    res=[]
+    f=open(s)
+    for line in f:
+        cur=json.loads(line)
+        #print("yep")
+        res.append(handle(cur))
+    return res
 if __name__ == '__main__':
     # --------- init open ----------
+    weak_classifier1=init_cl("v1/weak1.json")
+    weak_classifier2=init_cl("v1/weak2.json")
+    weak_classifier3=init_cl("v1/weak3.json")
     xs = []
     treet = os.walk("weak_learning/true/")
     treef = os.walk("weak_learning/false/")
@@ -359,27 +377,24 @@ if __name__ == '__main__':
             markglob.append(0)
     xst = np.array(xst)
     xsf = np.array(xsf)
-    # получаем тип отклонение
-    random.seed(324960)
-    xs,tr=sample_data(100,100,xsf,xst)
-    sample_mean=xs.mean()
-    sample_std=xs.std()
-    del xs
-    del tr
-    random.seed(1339)
-    np.random.seed(1339)
-    xs, mark = sample_data(500, 500, xsf, xst)
+    random.seed(1338)
+    np.random.seed(1338)
+    xs, mark = sample_data(100, 100, xsf, xst)
+    #xs=normalize(xs,sample_mean,sample_std)
     # print(xs)
     # mark = np.array(mark)
     # xs = np.array(xs)
     # это тип как бы нормализует
-    # sample_mean = xs.mean()  # медианка или среднее
-    # sample_std = xs.std()  # отклонение: sqrt(sum((cur - sample_mean)^2))
-    # xs = normalize(xs, sample_mean, sample_std) # тип нормализировали
+    #sample_mean = xs.mean()  # медианка или среднее
+    #sample_std = xs.std()  # отклонение: sqrt(sum((cur - sample_mean)^2))
+    #xs = normalize(xs, sample_mean, sample_std) # тип нормализировали
+    #print(xs.std())
+    #print(xs.mean())
+    #for x in xs:
+    #    to_im(x).show()
     # xs.reshape((xs.shape[0],xs.shape[1] + 1, xs.shape[2] + 1))
-    xs_int1=[]
-    xs_int = []
-
+    xs_int1 = []
+##  xs_int = []
     for i in range(0, xs.shape[0]):
         xs_int.append(to_integral(xs[i]))
         # print(i)
@@ -387,11 +402,12 @@ if __name__ == '__main__':
         xs_int1.append(to_integral(x))
     for x in xsf:
         xs_int1.append(to_integral(x))
-    xs = np.array(xs_int)
-    xs_int1=np.array(xs_int1)
+##    xs = np.array(xs_int)
+    #xs_int1=np.array(xs_int1)
+    #xs_int1=normalize(xs_int1,sample_mean, sample_std)
     # del xs_int
     # xs=to_integral(xs) # ура мы интегральное изображение
-    features = gen_all_features()
+##    features = gen_all_features()
 
     # --------- init close ----------
     # f = features[0]
@@ -402,7 +418,7 @@ if __name__ == '__main__':
     # xs=np.array(temp) # first - угу, second - ага
     # del temp
     #weak_classifier1 = build_weak_classifier(2, xs, mark, features)  # пока срать на то, что было
-    weak_classifier2 = build_weak_classifier(25, xs, mark, features)
+    weak_classifier2 = build_weak_classifier(2, xs, mark, features)
     for x in weak_classifier2:
         print(json.dumps(x, default=obj_json))
     #pool = multiprocessing.Pool()
@@ -425,6 +441,10 @@ if __name__ == '__main__':
     for xs, ys in zip(xs_int1, markglob): # тестим last
         all += 1
         req = strong_classifier(xs, weak_classifier2)
+        if (req == 1.0):
+            req=1.0
+        else:
+            req = 0
         if ys == 0:
             if req == 0:
                 npn += 1
@@ -437,7 +457,8 @@ if __name__ == '__main__':
                 ppp += 1
     print("{0} {1}\n".format((npn * 1.0) / (1.0 * all), (1.0 * npp) / (1.0 * all)))
     print("{0} {1}\n".format((ppn * 1.0) / (1.0 * all), (1.0 * ppp) / (1.0 * all)))
-    #https://ru.stackoverflow.com/questions/1352814/typeerror-type-object-is-not-subscriptableprint("first stage: {0} found".format(test_big_im(weak_classifier2, "weak_learning/bigtestim.png")))
+    #print("first stage: {0} found".format(test_big_im(weak_classifier1, weak_classifier2, weak_classifier3, "weak_learning/bigtestim4.jpg")))
 
 # насчёт sample_data - тупо 1000 рандомов достаём, хехехее, я понял
-# ебать я дебил, в интегралку даже не перевёл#
+# ебать я дебил, в интегралку даже не перевёл
+#
