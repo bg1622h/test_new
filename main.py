@@ -356,9 +356,9 @@ def init_cl(s):
     return res
 if __name__ == '__main__':
     # --------- init open ----------
-    weak_classifier1=init_cl("v1/weak1.json")
-    weak_classifier2=init_cl("v1/weak2.json")
-    weak_classifier3=init_cl("v1/weak3.json")
+    ###weak_classifier1=init_cl("v1/weak1.json")
+    ###weak_classifier2=init_cl("v1/weak2.json")
+    ###weak_classifier3=init_cl("v1/weak3.json")
     xs = []
     treet = os.walk("weak_learning/true/")
     treef = os.walk("weak_learning/false/")
