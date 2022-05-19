@@ -377,9 +377,9 @@ if __name__ == '__main__':
             markglob.append(0)
     xst = np.array(xst)
     xsf = np.array(xsf)
-    random.seed(1337)
-    np.random.seed(1337)
-    xs, mark = sample_data(100, 100, xsf, xst)
+    random.seed(1338)
+    np.random.seed(1338)
+    xs, mark = sample_data(1000, 1000, xsf, xst)
     #xs=normalize(xs,sample_mean,sample_std)
     # print(xs)
     # mark = np.array(mark)
@@ -418,7 +418,7 @@ if __name__ == '__main__':
     # xs=np.array(temp) # first - угу, second - ага
     # del temp
     #weak_classifier1 = build_weak_classifier(2, xs, mark, features)  # пока срать на то, что было
-    weak_classifier2 = build_weak_classifier(2, xs, mark, features)
+    weak_classifier2 = build_weak_classifier(10, xs, mark, features)
     for x in weak_classifier2:
         print(json.dumps(x, default=obj_json))
     #pool = multiprocessing.Pool()
