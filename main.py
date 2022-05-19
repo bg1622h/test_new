@@ -377,8 +377,8 @@ if __name__ == '__main__':
             markglob.append(0)
     xst = np.array(xst)
     xsf = np.array(xsf)
-    random.seed(1338)
-    np.random.seed(1338)
+    random.seed(1337)
+    np.random.seed(1337)
     xs, mark = sample_data(100, 100, xsf, xst)
     #xs=normalize(xs,sample_mean,sample_std)
     # print(xs)
@@ -394,7 +394,7 @@ if __name__ == '__main__':
     #    to_im(x).show()
     # xs.reshape((xs.shape[0],xs.shape[1] + 1, xs.shape[2] + 1))
     xs_int1 = []
-##  xs_int = []
+    xs_int = []
     for i in range(0, xs.shape[0]):
         xs_int.append(to_integral(xs[i]))
         # print(i)
@@ -402,12 +402,12 @@ if __name__ == '__main__':
         xs_int1.append(to_integral(x))
     for x in xsf:
         xs_int1.append(to_integral(x))
-##    xs = np.array(xs_int)
-    #xs_int1=np.array(xs_int1)
+    xs = np.array(xs_int)
+    xs_int1=np.array(xs_int1)
     #xs_int1=normalize(xs_int1,sample_mean, sample_std)
     # del xs_int
     # xs=to_integral(xs) # ура мы интегральное изображение
-##    features = gen_all_features()
+    features = gen_all_features()
 
     # --------- init close ----------
     # f = features[0]
