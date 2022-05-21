@@ -517,7 +517,7 @@ if __name__ == '__main__':
     # xs=np.array(temp) # first - угу, second - ага
     # del temp
 ###    weak_classifier1 = build_weak_classifier(2, xs, mark, features)  # пока срать на то, что было
-    weak_classifier2 = build_weak_classifier(2, xs, mark, features)
+    weak_classifier2 = build_weak_classifier(10, xs, mark, features)
     for x in weak_classifier2:
         print(json.dumps(x, default=obj_json))
     #pool = multiprocessing.Pool()
