@@ -477,9 +477,9 @@ if __name__ == '__main__':
 ##            cntt+=1
 ##            to_im(x).save("D:/face_recognition/tr/other/face/pic{0}.png".format(cntt))
 ##    sys.exit()
-    random.seed(1336)
-    np.random.seed(1336)
-    xs, mark = sample_data(1336, 1250, xsf, xst)
+    random.seed(1337)
+    np.random.seed(1337)
+    xs, mark = sample_data(2186, 1893, xsf, xst)
     #xs=normalize(xs,sample_mean,sample_std)
     # print(xs)
     # mark = np.array(mark)
