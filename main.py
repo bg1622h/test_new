@@ -269,29 +269,11 @@ def sample_data(p: int, n: int, xsf: np.ndarray, xst: np.ndarray):
         xs.append(random.choice(xst))
         k.append(i)
         i+=1
-    # to_im(random.choice(xs)).show()
-    treefo=os.walk("tr/face/other")
-    for address, dirs, files in treefo:
-        for name in files:
-            path = os.path.join(address, name)
-            xs.append(to_fl_array(Image.open(path)))
-            k.append(i)
-            i += 1
-            mark.append(1)
     for i in range(0, n):
         mark.append(0)
-        # k = random.randint(0, len(xsf) - 1)
         xs.append(random.choice(xsf))
         k.append(i)
         i += 1
-    treeof=os.walk("tr/other/face")
-    for address, dirs, files in treefo:
-        for name in files:
-            path = os.path.join(address, name)
-            xs.append(to_fl_array(Image.open(path)))
-            k.append(i)
-            i += 1
-            mark.append(0)
     xs = np.array(xs)
     mark = np.array(mark)
     random.shuffle(k)
@@ -477,9 +459,9 @@ if __name__ == '__main__':
 ##            cntt+=1
 ##            to_im(x).save("D:/face_recognition/tr/other/face/pic{0}.png".format(cntt))
 ##    sys.exit()
-    random.seed(1337)
-    np.random.seed(1337)
-    xs, mark = sample_data(2186, 1893, xsf, xst)
+    random.seed(1336)
+    np.random.seed(1336)
+    xs, mark = sample_data(2500, 2500, xsf, xst)
     #xs=normalize(xs,sample_mean,sample_std)
     # print(xs)
     # mark = np.array(mark)
@@ -517,7 +499,7 @@ if __name__ == '__main__':
     # xs=np.array(temp) # first - угу, second - ага
     # del temp
 ###    weak_classifier1 = build_weak_classifier(2, xs, mark, features)  # пока срать на то, что было
-    weak_classifier2 = build_weak_classifier(10, xs, mark, features)
+    weak_classifier2 = build_weak_classifier(2, xs, mark, features)
     for x in weak_classifier2:
         print(json.dumps(x, default=obj_json))
     #pool = multiprocessing.Pool()
