@@ -261,24 +261,18 @@ def build_weak_classifier(numf: int, xs: np.ndarray, ys: np.ndarray, features, w
 def sample_data(p: int, n: int, xsf: np.ndarray, xst: np.ndarray):
     xs = []
     mark = []
-    k=[]
     i=0
     for i in range(0, p):
         mark.append(1)
         # k = random.randint(0,len(xst) - 1)
         xs.append(random.choice(xst))
-        k.append(i)
         i+=1
     for i in range(0, n):
         mark.append(0)
         xs.append(random.choice(xsf))
-        k.append(i)
         i += 1
     xs = np.array(xs)
     mark = np.array(mark)
-    random.shuffle(k)
-    xs=xs[k]
-    mark=mark[k]
     # sample_mean = xs.mean()  # медианка или среднее
     # sample_std = xs.std()  # отклонение: sqrt(sum((cur - sample_mean)^2))
     # xs = normalize(xs, sample_mean, sample_std) # тип нормализировали
