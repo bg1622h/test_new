@@ -266,11 +266,9 @@ def sample_data(p: int, n: int, xsf: np.ndarray, xst: np.ndarray):
         mark.append(1)
         # k = random.randint(0,len(xst) - 1)
         xs.append(random.choice(xst))
-        i+=1
     for i in range(0, n):
         mark.append(0)
         xs.append(random.choice(xsf))
-        i += 1
     xs = np.array(xs)
     mark = np.array(mark)
     # sample_mean = xs.mean()  # медианка или среднее
