@@ -21,78 +21,78 @@ STATUS_EVERY = 20000  # другой размер должен быть (16000),
 KEEP_PROBABILITY = 1. / 4.
 
 
-def render_candidates(image: Image.Image, candidates: list[tuple[int, int]], HALF_WINDOW):
-    canvas = to_fl_array(image.copy())
-    for row, col,HALF_WINDOW_y, HALF_WINDOW_w,alpha  in candidates:
-        canvas[row - HALF_WINDOW_y:row + HALF_WINDOW_y, col - HALF_WINDOW_w - 1, :] = [1., 0., 0.]
-        canvas[row - HALF_WINDOW_y:row + HALF_WINDOW_y, col + HALF_WINDOW_w - 1, :] = [1., 0., 0.]
-        canvas[row - HALF_WINDOW_y, col - HALF_WINDOW_y:col + HALF_WINDOW_w - 1, :] = [1., 0., 0.]
-        canvas[row + HALF_WINDOW_y, col - HALF_WINDOW_y:col + HALF_WINDOW_w - 1, :] = [1., 0., 0.]
-    return to_im(canvas)
-def test_big_im1(weaks1: list[clf], weaks2: list[clf], weaks3: list[clf], way:str):
-    stepx = 1
-    stepy = 1
-    original_image = Image.open(way)
-    # s_im=original_image.copy()
-    target_size = (384, 288)
-    #target_size = (500, 500)
-    #original_image.thumbnail(target_size, Image.ANTIALIAS)
-    s_im=original_image
-    original = to_fl_array(original_image)
-    grayscale = gleam(original)
-    #grayscale = gamma(original)
-    to_im(grayscale).save("gim.png")
-    b_im=Image.open("gim.png")
-    grayscale=to_fl_array(b_im)
-    integral=to_integral(grayscale)
-    rows, cols = integral.shape[0:2]
-    HALF_WINDOW = 27
-    face_position = []
-    b_im.show() ### великолепно, а главное работает
-    for HALF_WINDOW_w in range(HALF_WINDOW, HALF_WINDOW + 1):
-        for HALF_WINDOW_y in range(HALF_WINDOW, HALF_WINDOW + 1):
-            for row in range(HALF_WINDOW_y + 1, rows - HALF_WINDOW_y, stepy):
-                for col in range(HALF_WINDOW_w + 1, cols - HALF_WINDOW_w, stepx):
-                    target_size1=(24, 24)
-                    #win_im.thumbnail(target_size1, Image.ANTIALIAS)
-                    #orw=to_fl_array(win_im)
-                    #wgr=gleam(orw)
-                    #window=to_integral(wgr)
-                    #window = integral[row - HALF_WINDOW_w - 1:row + HALF_WINDOW_w,
-                    #         col - HALF_WINDOW_y - 1:col + HALF_WINDOW_y]
-                    # sv = copy.deepcopy(weaks1)
-                    # weaks1=crop(weaks1,HALF_WINDOW_w,HALF_WINDOW_y)
-                    #if (window.shape[0] < 25) or (window.shape[1] < 25):
-                    #    print("Here")
-                    window = b_im.crop(
-                        (col - HALF_WINDOW_w, row - HALF_WINDOW_y, col + HALF_WINDOW_w, row + HALF_WINDOW_y))
-                    window = window.resize(target_size1, Image.ANTIALIAS)
-                    twindow=window
-                    window=to_fl_array(window)
-                    window = to_integral(window)
-                    probably_face = strong_classifier(window, weaks1)
-                    if probably_face == 0:
-                        continue
-                    # sv = copy.deepcopy(weaks2)
-                    # weaks2 = crop(weaks2, HALF_WINDOW_w, HALF_WINDOW_y)
-                    probably_face = strong_classifier(window, weaks2)
-                    # weaks2 = sv
-                    if probably_face == 0:
-                        continue
-                    # sv = copy.deepcopy(weaks3)
-                    # weaks3 = crop(weaks3, HALF_WINDOW_w, HALF_WINDOW_y)
-                    probably_face = strong_classifier(window, weaks3)
-                    # weaks3= sv
-                    if probably_face == 0:
-                        continue
-                    #twindow.show()
-                    sum_ot=strong_classifier_s(window, weaks1) + strong_classifier_s(window, weaks2) + strong_classifier_s(window, weaks3)
-                    face_position.append((row, col,HALF_WINDOW_y, HALF_WINDOW_w, sum_ot))
-    render_candidates(s_im, face_position, HALF_WINDOW).show()
-    print(len(face_position))
-    face_position = NMS(face_position)
-    render_candidates(s_im, face_position, HALF_WINDOW).show()
-    return len(face_position)
+#def render_candidates(image: Image.Image, candidates: list[tuple[int, int]], HALF_WINDOW):
+#    canvas = to_fl_array(image.copy())
+#    for row, col,HALF_WINDOW_y, HALF_WINDOW_w,alpha  in candidates:
+#        canvas[row - HALF_WINDOW_y:row + HALF_WINDOW_y, col - HALF_WINDOW_w - 1, :] = [1., 0., 0.]
+#        canvas[row - HALF_WINDOW_y:row + HALF_WINDOW_y, col + HALF_WINDOW_w - 1, :] = [1., 0., 0.]
+#        canvas[row - HALF_WINDOW_y, col - HALF_WINDOW_y:col + HALF_WINDOW_w - 1, :] = [1., 0., 0.]
+#        canvas[row + HALF_WINDOW_y, col - HALF_WINDOW_y:col + HALF_WINDOW_w - 1, :] = [1., 0., 0.]
+#    return to_im(canvas)
+#def test_big_im1(weaks1: list[clf], weaks2: list[clf], weaks3: list[clf], way:str):
+#    stepx = 1
+#    stepy = 1
+#    original_image = Image.open(way)
+#    # s_im=original_image.copy()
+#    target_size = (384, 288)
+#    #target_size = (500, 500)
+#    #original_image.thumbnail(target_size, Image.ANTIALIAS)
+#    s_im=original_image
+#    original = to_fl_array(original_image)
+#    grayscale = gleam(original)
+#    #grayscale = gamma(original)
+#    to_im(grayscale).save("gim.png")
+#    b_im=Image.open("gim.png")
+#    grayscale=to_fl_array(b_im)
+#    integral=to_integral(grayscale)
+#    rows, cols = integral.shape[0:2]
+#    HALF_WINDOW = 27
+#    face_position = []
+#    b_im.show() ### великолепно, а главное работает
+#    for HALF_WINDOW_w in range(HALF_WINDOW, HALF_WINDOW + 1):
+#        for HALF_WINDOW_y in range(HALF_WINDOW, HALF_WINDOW + 1):
+#            for row in range(HALF_WINDOW_y + 1, rows - HALF_WINDOW_y, stepy):
+#                for col in range(HALF_WINDOW_w + 1, cols - HALF_WINDOW_w, stepx):
+#                    target_size1=(24, 24)
+#                    #win_im.thumbnail(target_size1, Image.ANTIALIAS)
+#                    #orw=to_fl_array(win_im)
+#                    #wgr=gleam(orw)
+#                    #window=to_integral(wgr)
+#                    #window = integral[row - HALF_WINDOW_w - 1:row + HALF_WINDOW_w,
+#                    #         col - HALF_WINDOW_y - 1:col + HALF_WINDOW_y]
+#                    # sv = copy.deepcopy(weaks1)
+#                    # weaks1=crop(weaks1,HALF_WINDOW_w,HALF_WINDOW_y)
+#                    #if (window.shape[0] < 25) or (window.shape[1] < 25):
+#                    #    print("Here")
+#                    window = b_im.crop(
+#                        (col - HALF_WINDOW_w, row - HALF_WINDOW_y, col + HALF_WINDOW_w, row + HALF_WINDOW_y))
+#                    window = window.resize(target_size1, Image.ANTIALIAS)
+#                    twindow=window
+#                    window=to_fl_array(window)
+#                    window = to_integral(window)
+#                    probably_face = strong_classifier(window, weaks1)
+#                    if probably_face == 0:
+#                        continue
+#                    # sv = copy.deepcopy(weaks2)
+#                    # weaks2 = crop(weaks2, HALF_WINDOW_w, HALF_WINDOW_y)
+#                    probably_face = strong_classifier(window, weaks2)
+#                    # weaks2 = sv
+#                    if probably_face == 0:
+#                        continue
+#                    # sv = copy.deepcopy(weaks3)
+#                    # weaks3 = crop(weaks3, HALF_WINDOW_w, HALF_WINDOW_y)
+#                    probably_face = strong_classifier(window, weaks3)
+#                    # weaks3= sv
+#                    if probably_face == 0:
+#                        continue
+#                    #twindow.show()
+#                    sum_ot=strong_classifier_s(window, weaks1) + strong_classifier_s(window, weaks2) + strong_classifier_s(window, weaks3)
+#                    face_position.append((row, col,HALF_WINDOW_y, HALF_WINDOW_w, sum_ot))
+#    render_candidates(s_im, face_position, HALF_WINDOW).show()
+#    print(len(face_position))
+#    face_position = NMS(face_position)
+#    render_candidates(s_im, face_position, HALF_WINDOW).show()
+#    return len(face_position)
 def b_key(x):
     return -x[4]
 def intersect(l,r,l1,r1):
