@@ -230,10 +230,10 @@ def req_weak(x: np.ndarray, cl: Feature, polarity: float, border: float):
 #trash = Feature(0, 0, 0, 0, 0, 0)
 def calc_w(cl , xs: np.ndarray, ys: np.ndarray, ws: np.ndarray):
     pool = multiprocessing.Pool(processes = 4)
-    #print(sys.getsizeof(xs))
     zs=pool.map(cl,xs)
     zs=np.array(zs)
     pool.close()
+    pool.join()
     #if parallel is None:
     #    parallel = Parallel(n_jobs=-1, backend='threading')
     #zs = np.array(parallel(delayed(cl)(x) for x in xs))
