@@ -1,5 +1,6 @@
+import multiprocessing
 import sys
-
+from joblib import Parallel, delayed
 import numpy as np
 # import data
 import matplotlib.pyplot as plt
@@ -8,18 +9,115 @@ import random
 import os
 from feature_main import *
 # import datetime
+import test_im
 from datetime import datetime
 import json
 from multiprocessing import Process, Lock
 # import feature
 big_im_path = "D:/weak_learning/bigtestim.png"
 # from faces import *
-
 WINDOW_SIZE = 24  # другой размер должен быть (24)
 STATUS_EVERY = 20000  # другой размер должен быть (16000), для эксперемента ставим 2к
 KEEP_PROBABILITY = 1. / 4.
 
 
+def render_candidates(image: Image.Image, candidates: list[tuple[int, int]], HALF_WINDOW):
+    canvas = to_fl_array(image.copy())
+    for row, col,HALF_WINDOW_y, HALF_WINDOW_w,alpha  in candidates:
+        canvas[row - HALF_WINDOW_y:row + HALF_WINDOW_y, col - HALF_WINDOW_w - 1, :] = [1., 0., 0.]
+        canvas[row - HALF_WINDOW_y:row + HALF_WINDOW_y, col + HALF_WINDOW_w - 1, :] = [1., 0., 0.]
+        canvas[row - HALF_WINDOW_y, col - HALF_WINDOW_y:col + HALF_WINDOW_w - 1, :] = [1., 0., 0.]
+        canvas[row + HALF_WINDOW_y, col - HALF_WINDOW_y:col + HALF_WINDOW_w - 1, :] = [1., 0., 0.]
+    return to_im(canvas)
+def test_big_im1(weaks1: list[clf], weaks2: list[clf], weaks3: list[clf], way:str):
+    stepx = 1
+    stepy = 1
+    original_image = Image.open(way)
+    # s_im=original_image.copy()
+    target_size = (384, 288)
+    #target_size = (500, 500)
+    #original_image.thumbnail(target_size, Image.ANTIALIAS)
+    s_im=original_image
+    original = to_fl_array(original_image)
+    grayscale = gleam(original)
+    #grayscale = gamma(original)
+    to_im(grayscale).save("gim.png")
+    b_im=Image.open("gim.png")
+    grayscale=to_fl_array(b_im)
+    integral=to_integral(grayscale)
+    rows, cols = integral.shape[0:2]
+    HALF_WINDOW = 27
+    face_position = []
+    b_im.show() ### великолепно, а главное работает
+    for HALF_WINDOW_w in range(HALF_WINDOW, HALF_WINDOW + 1):
+        for HALF_WINDOW_y in range(HALF_WINDOW, HALF_WINDOW + 1):
+            for row in range(HALF_WINDOW_y + 1, rows - HALF_WINDOW_y, stepy):
+                for col in range(HALF_WINDOW_w + 1, cols - HALF_WINDOW_w, stepx):
+                    target_size1=(24, 24)
+                    #win_im.thumbnail(target_size1, Image.ANTIALIAS)
+                    #orw=to_fl_array(win_im)
+                    #wgr=gleam(orw)
+                    #window=to_integral(wgr)
+                    #window = integral[row - HALF_WINDOW_w - 1:row + HALF_WINDOW_w,
+                    #         col - HALF_WINDOW_y - 1:col + HALF_WINDOW_y]
+                    # sv = copy.deepcopy(weaks1)
+                    # weaks1=crop(weaks1,HALF_WINDOW_w,HALF_WINDOW_y)
+                    #if (window.shape[0] < 25) or (window.shape[1] < 25):
+                    #    print("Here")
+                    window = b_im.crop(
+                        (col - HALF_WINDOW_w, row - HALF_WINDOW_y, col + HALF_WINDOW_w, row + HALF_WINDOW_y))
+                    window = window.resize(target_size1, Image.ANTIALIAS)
+                    twindow=window
+                    window=to_fl_array(window)
+                    window = to_integral(window)
+                    probably_face = strong_classifier(window, weaks1)
+                    if probably_face == 0:
+                        continue
+                    # sv = copy.deepcopy(weaks2)
+                    # weaks2 = crop(weaks2, HALF_WINDOW_w, HALF_WINDOW_y)
+                    probably_face = strong_classifier(window, weaks2)
+                    # weaks2 = sv
+                    if probably_face == 0:
+                        continue
+                    # sv = copy.deepcopy(weaks3)
+                    # weaks3 = crop(weaks3, HALF_WINDOW_w, HALF_WINDOW_y)
+                    probably_face = strong_classifier(window, weaks3)
+                    # weaks3= sv
+                    if probably_face == 0:
+                        continue
+                    #twindow.show()
+                    sum_ot=strong_classifier_s(window, weaks1) + strong_classifier_s(window, weaks2) + strong_classifier_s(window, weaks3)
+                    face_position.append((row, col,HALF_WINDOW_y, HALF_WINDOW_w, sum_ot))
+    render_candidates(s_im, face_position, HALF_WINDOW).show()
+    print(len(face_position))
+    face_position = NMS(face_position)
+    render_candidates(s_im, face_position, HALF_WINDOW).show()
+    return len(face_position)
+def b_key(x):
+    return -x[4]
+def intersect(l,r,l1,r1):
+    l=max(l,l1)
+    r=min(r,r1)
+    return max(0, r - l + 1)
+def NMS(a):
+    CIoU=0.05
+    list_ans=[]
+    a=sorted(a, key = b_key)
+    while len(a):
+        cur=a[0]
+        list_ans.append(cur)
+        a.remove(cur)
+        dell=[]
+        for x in a:
+            w = intersect(cur[1] - cur[3], cur[1] + cur[3], x[1] - x[3], x[1] + x[3])
+            h = intersect(cur[0] - cur[2], cur[0] + cur[2], x[0] - x[2], x[0] + x[2])
+            s = (4 * x[3] * x[2]) + (4 * cur[3] * cur[2]) - w * h
+            chiou=(1.0 * w * h) / (1.0 * s)
+            if (chiou > CIoU):
+                dell.append(x)
+        for x in dell:
+            a.remove(x)
+    return list_ans
 def to_fl_array(img: Image.Image):  # а есть ссылка получается, ничего себе
     return np.array(img).astype(np.float64) / 255.0
 
@@ -82,23 +180,15 @@ def gen_all_features():
     print(f'Number of feature4 features:  {len(feature4)}')
     print(f'Total number of features:     {len(features)}')
     return features
-
-
-# append если группой то массив добавит в массив append([1,2]) [1,2,[1,2]]
-# extend одиночно добавляет эелменты ([1,2]) [1,2,1,2]
-#def normalize(im: np.ndarray, mean, std):
-#    return (im - mean) / std
-
-
 def get_idx(weight: np.ndarray, mark: np.ndarray, res: np.ndarray):
-    # надо сортить
-    p = np.argsort(res)
+
+    p = np.argsort(res) # def _ (weight: веса каждого примера, mark: 0/1,
+    # res: значение применения признака)
     res = res[p]
     weight = weight[p]
     mark = mark[p]
-
-    s_minuses = []
-    s_pluses = []
+    s_minuses = [] #S+ для каждого шага
+    s_pluses = []  #S- для каждого шага
     t_minus = 0.0
     t_plus = 0.0
     s_minus = 0.0
@@ -113,46 +203,19 @@ def get_idx(weight: np.ndarray, mark: np.ndarray, res: np.ndarray):
             t_plus += w
         s_minuses.append(s_minus)
         s_pluses.append(s_plus)
-    # errors_1, errors_2 = [], []
-
     min_e = float('inf')
-    min_idx = 0
     polarity = 0
     for i, (s_m, s_p) in enumerate(zip(s_minuses, s_pluses)):
         error_1 = s_p + (t_minus - s_m)
         error_2 = s_m + (t_plus - s_p)
-        # errors_1.append(error_1)
-        # errors_2.append(error_2)
         if error_1 < min_e:
             min_e = error_1
             border = res[i]
-            # min_idx = i
             polarity = -1
         elif error_2 < min_e:
             min_e = error_2
             border = res[i]
-            # min_idx = i
             polarity = 1
-
-    # v1 = 0
-    # v2 = 0
-    # v3 = 0
-    # v4 = 0
-    # for i in range(0, len(res)):
-    #     if (mark[i] == 0):
-    #         if (polarity * res[i] < polarity * border):
-    #             v2 += 1
-    #         else:
-    #             v1 += 1
-    #     else:
-    #         if (polarity * res[i] < polarity * border):
-    #             v4 += 1
-    #         else:
-    #             v3 += 1
-    # print('{0}    {1}\n'.format((v1 * 100) / (v1 + v2 + v3 + v4), (v2 * 100) / (v1 + v2 + v3 + v4)))
-    # print('{0}    {1}\n'.format((v3 * 100) / (v1 + v2 + v3 + v4), (v4 * 100) / (v1 + v2 + v3 + v4)))
-    # print(
-    #     f'Minimal error: {min_e:.2} at index {min_idx} with threshold {res[min_idx]:.2}. Classifier polarity is {polarity}.')
     return border, polarity
 
 
@@ -167,26 +230,28 @@ def req_weak(x: np.ndarray, cl: Feature, polarity: float, border: float):
         return 0.0
 #trash = Feature(0, 0, 0, 0, 0, 0)
 def calc_w(cl , xs: np.ndarray, ys: np.ndarray, ws: np.ndarray):
-    # zs = np.array(cl(x) for x in xs)
-    #Feature
-    zs = []
-    for x in xs:
-        zs.append(1.0 * cl(x))
-    zs = np.array(zs)
-    border, polarity = get_idx(ws, ys, zs)
+    pool = multiprocessing.Pool()
+    zs=pool.map(cl,xs)
+    zs=np.array(zs)
+    #if parallel is None:
+    #    parallel = Parallel(n_jobs=-1, backend='threading')
+    #zs = np.array(parallel(delayed(cl)(x) for x in xs))
+    #zs = []
+    #for x in xs:
+    #    zs.append(1.0 * cl(x)) # cl(x) - применение признака
+    #zs = np.array(zs)
+    border, polarity = get_idx(ws, ys, zs) # нахождение границы и полярности
     cl_error = 0.0
     for x, y, w in zip(xs, ys, ws):
-        req = req_weak(x, cl, polarity, border)
+        req = req_weak(x, cl, polarity, border) # нахождение ошибки классификации
         cl_error += w * np.abs(req - y)
     return clf(cl, border, polarity, 0), cl_error
-
-
 def run_weak_classifier(x: np.ndarray, f: clf):
     return req_weak(x, f.cl, f.cl.polarity, f.cl.theta)
 
 
 def build_weak_classifier(numf: int, xs: np.ndarray, ys: np.ndarray, features, ws: Optional[np.ndarray] = None):  # есть или нет, хз короче (optional)
-    if ws is None:  # если пуста дура
+    if ws is None: # инициализация
         m = 0  # negative
         l = 0  # positive
         for x in ys:
@@ -200,31 +265,25 @@ def build_weak_classifier(numf: int, xs: np.ndarray, ys: np.ndarray, features, w
                 ws.append(1.0 / (2.0 * m))
             else:
                 ws.append(1.0 / (2.0 * l))
-    weak_classifiers = []  # тут как бы ответ
-    total_start_time = datetime.now()
     ws = np.array(ws)
+    total_start_time = datetime.now()
+    weak_classifiers = []  # тут ответ
     for t in range(0, numf):
         print(f'Building weak classifier {0}/{1} ...'.format(t + 1, numf))
         start_time = datetime.now()
-        ws = normalize_w(ws)  # надеюсь вообще работает
+        ws = normalize_w(ws)  # нормализация весов
         status_counter = STATUS_EVERY
         berror = float('inf')
         bfeature = Feature(0, 0, 0, 0, 0, 0)
         num = 0
         for i, cl in enumerate(features):  # i, list[i]
             status_counter -= 1
-            #if (i==47318) and (t == 2):
-            #    print("there\n")
-            #for xcur in weak_classifiers:
-            #    if (xcur.cl.alpha)==0:
-            #        print("wewewewe\n")
-                #print("{0}\n".format(xcur.cl.alpha))
             f = False
-            if KEEP_PROBABILITY < 1.0:
+            if KEEP_PROBABILITY < 1.0: # пропускаем KEEP_PROBABILITY классификаторов
                 skip_probability = np.random.random()
                 if skip_probability > KEEP_PROBABILITY:
                     continue
-            req, error_r = calc_w(cl, xs, ys, ws)  # ой бля
+            req, error_r = calc_w(cl, xs, ys, ws)
             if error_r < berror:
                 f = True
                 bfeature = req
@@ -256,21 +315,25 @@ def build_weak_classifier(numf: int, xs: np.ndarray, ys: np.ndarray, features, w
             e = np.abs(h - y)
             ws[i] = ws[i] * np.power(beta, 1 - e)
     return weak_classifiers
-
-
 def sample_data(p: int, n: int, xsf: np.ndarray, xst: np.ndarray):
     xs = []
     mark = []
-    i=0
+    k=[]
     for i in range(0, p):
         mark.append(1)
         # k = random.randint(0,len(xst) - 1)
         xs.append(random.choice(xst))
+        k.append(len(xs) - 1)
     for i in range(0, n):
         mark.append(0)
+        # k = random.randint(0, len(xsf) - 1)
         xs.append(random.choice(xsf))
+        k.append(len(xs) - 1)
     xs = np.array(xs)
     mark = np.array(mark)
+    random.shuffle(k)
+    xs=xs[k]
+    mark=mark[k]
     # sample_mean = xs.mean()  # медианка или среднее
     # sample_std = xs.std()  # отклонение: sqrt(sum((cur - sample_mean)^2))
     # xs = normalize(xs, sample_mean, sample_std) # тип нормализировали
@@ -287,86 +350,13 @@ def strong_classifier(x: np.ndarray, weaks):
         return 1.0
     else:
         return 0.0
-##def render_candidates(image: Image.Image, candidates: list[tuple[int, int]], HALF_WINDOW):
-##    canvas = to_fl_array(image.copy())
-##    for row, col in candidates:
-##        canvas[row - HALF_WINDOW - 1:row + HALF_WINDOW, col - HALF_WINDOW - 1, :] = [1., 0., 0.]
-##        canvas[row - HALF_WINDOW - 1:row + HALF_WINDOW, col + HALF_WINDOW - 1, :] = [1., 0., 0.]
-##        canvas[row - HALF_WINDOW - 1, col - HALF_WINDOW - 1:col + HALF_WINDOW, :] = [1., 0., 0.]
-##        canvas[row + HALF_WINDOW - 1, col - HALF_WINDOW - 1:col + HALF_WINDOW, :] = [1., 0., 0.]
-##    return to_im(canvas)
-#def crop(weaks1l:list[clf],x,y):
-#    W_x=24
-#    W_y=24
-#    x*=2
-#    y*=2
-#    for weaks1 in weaks1l:
-        #print("{0} {1}".format(weaks1.cl.x,W_x))
-#        px=1.0*weaks1.cl.x/W_x # какя часть от этого - x
-#        weaks1.cl.x=int(px*x)
-#        py=1.0*weaks1.cl.y/W_y
-#        weaks1.cl.y=int(py*y)
-#        rx=1.0*x/W_x
-#        ry=1.0*y/W_y
-#        weaks1.cl.height*=ry
-#        weaks1.cl.width*=rx
-        #if weaks1.cl.type == 0:
-        #    rx/=2
-        #if weaks1.cl.type == 1:
-        #    ry/=2
-        #if weaks1.cl.type == 2:
-        #    rx/=3
-        #if weaks1.cl.type == 3:
-        #    ry/=3
-        #if weaks1.cl.type == 4:
-        #    ry/=2
-        #    rx/=2
-        #weaks1.cl.theta*=rx*ry
-#    return weaks1l
-##def test_big_im(weaks1: list[clf], weaks2: list[clf], weaks3: list[clf], way:str):
-##    stepx=1
-##    stepy=1
-##    original_image = Image.open(way)
-##    #s_im=original_image.copy()
-##    target_size = (384, 288)
-##    #target_size = (500, 500)
-##    original_image.thumbnail(target_size, Image.ANTIALIAS)
-##    s_im=original_image
-##    original=to_fl_array(original_image)
-##    grayscale=gleam(original)
-##    to_im(grayscale).show()
-##    #integral=to_integral(grayscale)
-##    #to_im(integral).show()
-##    rows,cols=integral.shape[0:2]
-##    #HALF_WINDOW = WINDOW_SIZE // 2
-##    HALF_WINDOW = 12
- ##   face_position=[]
- ##   for HALF_WINDOW_w in range(HALF_WINDOW, HALF_WINDOW + 5):
-##        for HALF_WINDOW_y in range(HALF_WINDOW, HALF_WINDOW + 5):
-##            for row in range(HALF_WINDOW_w + 1, rows - HALF_WINDOW_w, stepx):
-##                for col in range(HALF_WINDOW_y + 1, cols - HALF_WINDOW_y, stepy):
- ##                   window = integral[row - HALF_WINDOW_w - 1:row + HALF_WINDOW_w, col - HALF_WINDOW_y - 1:col + HALF_WINDOW_y]
- ##                   #sv = copy.deepcopy(weaks1)
- ##                   #weaks1=crop(weaks1,HALF_WINDOW_w,HALF_WINDOW_y)
- ##                   probably_face = strong_classifier(window,weaks1)
-  ##                  #weaks1 = sv
-  ##                  if probably_face == 0:
-  ##                      continue
-  ##                  #sv = copy.deepcopy(weaks2)
-  ##                  #weaks2 = crop(weaks2, HALF_WINDOW_w, HALF_WINDOW_y)
-  ##                  probably_face = strong_classifier(window,weaks2)
-  ##                  #weaks2 = sv
-  ##                  if probably_face == 0:
-  ##                      continue
- ##                   #sv = copy.deepcopy(weaks3)
- ##                   #weaks3 = crop(weaks3, HALF_WINDOW_w, HALF_WINDOW_y)
-  ##                  probably_face = strong_classifier(window, weaks3)
-##                 #weaks3= sv
-##                    if probably_face == 0:
-##                        continue
-##                    face_position.append((row, col))
-##    render_candidates(s_im,face_position,HALF_WINDOW).show()
-##    return len(face_position)
+def strong_classifier_s(x: np.ndarray, weaks):
+    sum_alpha = 0
+    cur_sum = 0
+    for c in weaks:
+        sum_alpha += c.cl.alpha
+        cur_sum += c.cl.alpha * run_weak_classifier(x, c)
+    return cur_sum
 def obj_json(cur : clf):
     return {
         "theta": cur.cl.theta,
@@ -396,25 +386,13 @@ def init_cl(s):
         #print("yep")
         res.append(handle(cur))
     return res
-##def get_video():
-##    cap = cv2.VideoCapture(0) # 0 - внутр, 1 - внеш
-##    while (True):
-##        ret, frame = cap.read()
-##        cv2.imshow('Video', frame)
-##        if cv2.waitKey(1) & 0xFF == ord('q'):
-##            cv2.imwrite("test.png", frame)
-##            break
-##    cap.release()
-##    cv2.destroyAllWindows()
 if __name__ == '__main__':
     #get_video()
     # --------- init open ----------
-##    weak_classifier1=init_cl("v1/weak1.json")
+##    weak_classifier1=init_cl("v2/weak1.json")
 ##    weak_classifier2=init_cl("v1/weak2.json")
 ##    weak_classifier3=init_cl("v1/weak3.json")
-    #print("first stage: {0} found".format(
-    #    test_big_im(weak_classifier1, weak_classifier2, weak_classifier3, "test.png")))
-    #print("first stage: {0} found".format(test_big_im(weak_classifier1, weak_classifier2, weak_classifier3, "weak_learning/blacks.jpg")))
+##    print("first stage: {0} found".format(test_big_im1(weak_classifier1, weak_classifier2, weak_classifier3, "weak_learning/bigtestim.png")))
     xs = []
     treet = os.walk("weak_learning/true/")
     treef = os.walk("weak_learning/false/")
@@ -433,27 +411,29 @@ if __name__ == '__main__':
             markglob.append(0)
     xst = np.array(xst)
     xsf = np.array(xsf)
-    cntt=0
-    cntf=0
-##    for x in xsf:
+##    cntt=0
+##    cntf=0
+##    for x in xst:
 ##        int=to_integral(x)
 ##        req = strong_classifier(int, weak_classifier1)
-        #req1 = strong_classifier(int, weak_classifier2)
-        #req2 = strong_classifier(int, weak_classifier3)
-        #if (req == 1.0) and (req1 == 1.0) and (req2 == 1.0):
-        #    req = 1.0
-        #else:
-        #    req = 0
+##        if req == 0:
+##            continue
+##        req = strong_classifier(int, weak_classifier2)
+##        #req2 = strong_classifier(int, weak_classifier3)
+##        #if (req == 1.0) and (req1 == 1.0) and (req2 == 1.0):
+##        #    req = 1.0
+##        #else:
+##        #    req = 0
 ##        if req == 0.0:
 ##            cntf+=1
-##            to_im(x).save("D:/face_recognition/tr/other/other/pic{0}.png".format(cntf))
+##            to_im(x).save("D:/face_recognition/tr/face/other/pic{0}.png".format(cntf))
 ##        else:
 ##            cntt+=1
-##            to_im(x).save("D:/face_recognition/tr/other/face/pic{0}.png".format(cntt))
-##    sys.exit()
+##            to_im(x).save("D:/face_recognition/tr/face/face/pic{0}.png".format(cntt))
+    #sys.exit()
     random.seed(1336)
     np.random.seed(1336)
-    xs, mark = sample_data(2500, 2500, xsf, xst)
+    xs, mark = sample_data(3000, 3000, xsf, xst)
     #xs=normalize(xs,sample_mean,sample_std)
     # print(xs)
     # mark = np.array(mark)
@@ -490,7 +470,6 @@ if __name__ == '__main__':
     # temp.append([xs[i],mark[i]])
     # xs=np.array(temp) # first - угу, second - ага
     # del temp
-###    weak_classifier1 = build_weak_classifier(2, xs, mark, features)  # пока срать на то, что было
     weak_classifier2 = build_weak_classifier(2, xs, mark, features)
     for x in weak_classifier2:
         print(json.dumps(x, default=obj_json))
@@ -513,14 +492,7 @@ if __name__ == '__main__':
     alln = 0
     allp = 0
     for xs, ys in zip(xs_int1, markglob): # тестим last
-        #alln += 1
         req = strong_classifier(xs, weak_classifier2)
-       # req1 = strong_classifier(xs, weak_classifier2)
-       # req2 = strong_classifier(xs, weak_classifier3)
-       # if (req == 1.0) and (req1 == 1.0) and (req2 == 1.0):
-       #     req=1.0
-       # else:
-       #     req = 0
         if ys == 0:
             alln+=1
             if req == 0:
