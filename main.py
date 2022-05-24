@@ -386,6 +386,7 @@ def init_cl(s):
         res.append(handle(cur))
     return res
 if __name__ == '__main__':
+    print(os.cpu_count())
     #get_video()
     # --------- init open ----------
 ##    weak_classifier1=init_cl("v2/weak1.json")
