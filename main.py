@@ -229,7 +229,7 @@ def req_weak(x: np.ndarray, cl: Feature, polarity: float, border: float):
         return 0.0
 #trash = Feature(0, 0, 0, 0, 0, 0)
 def calc_w(cl , xs: np.ndarray, ys: np.ndarray, ws: np.ndarray):
-    pool = multiprocessing.Pool(processes = 32)
+    pool = multiprocessing.Pool(processes = 100)
     zs=pool.map(cl,xs)
     zs=np.array(zs)
     pool.close()
@@ -433,8 +433,8 @@ if __name__ == '__main__':
 ##            cntt+=1
 ##            to_im(x).save("D:/face_recognition/tr/face/face/pic{0}.png".format(cntt))
     #sys.exit()
-    random.seed(1336)
-    np.random.seed(1336)
+    random.seed(1337)
+    np.random.seed(1337)
     xs, mark = sample_data(3000, 3000, xsf, xst)
     #xs=normalize(xs,sample_mean,sample_std)
     # print(xs)
@@ -472,7 +472,7 @@ if __name__ == '__main__':
     # temp.append([xs[i],mark[i]])
     # xs=np.array(temp) # first - угу, second - ага
     # del temp
-    weak_classifier2 = build_weak_classifier(2, xs, mark, features)
+    weak_classifier2 = build_weak_classifier(10, xs, mark, features)
     for x in weak_classifier2:
         print(json.dumps(x, default=obj_json))
     #pool = multiprocessing.Pool()
