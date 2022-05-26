@@ -229,18 +229,10 @@ def req_weak(x: np.ndarray, cl: Feature, polarity: float, border: float):
         return 0.0
 #trash = Feature(0, 0, 0, 0, 0, 0)
 def calc_w(cl , xs: np.ndarray, ys: np.ndarray, ws: np.ndarray):
-    pool = multiprocessing.Pool()
-    zs=pool.map(cl,xs)
-    zs=np.array(zs)
-    pool.close()
-    pool.join()
-    #if parallel is None:
-    #    parallel = Parallel(n_jobs=-1, backend='threading')
-    #zs = np.array(parallel(delayed(cl)(x) for x in xs))
-    #zs = []
-    #for x in xs:
-    #    zs.append(1.0 * cl(x)) # cl(x) - применение признака
-    #zs = np.array(zs)
+    zs = []
+    for x in xs:
+        zs.append(1.0 * cl(x)) # cl(x) - применение признака
+    zs = np.array(zs)
     border, polarity = get_idx(ws, ys, zs) # нахождение границы и полярности
     cl_error = 0.0
     for x, y, w in zip(xs, ys, ws):
