@@ -433,9 +433,9 @@ if __name__ == '__main__':
 ##            cntt+=1
 ##            to_im(x).save("D:/face_recognition/tr/face/face/pic{0}.png".format(cntt))
     #sys.exit()
-    random.seed(1339)
-    np.random.seed(1339)
-    xs, mark = sample_data(3000, 3000, xsf, xst)
+    random.seed(1337)
+    np.random.seed(1337)
+    xs, mark = sample_data(1000, 1000, xsf, xst)
     #xs=normalize(xs,sample_mean,sample_std)
     # print(xs)
     # mark = np.array(mark)
@@ -472,7 +472,7 @@ if __name__ == '__main__':
     # temp.append([xs[i],mark[i]])
     # xs=np.array(temp) # first - угу, second - ага
     # del temp
-    weak_classifier2 = build_weak_classifier(50, xs, mark, features)
+    weak_classifier2 = build_weak_classifier(10, xs, mark, features)
     for x in weak_classifier2:
         print(json.dumps(x, default=obj_json))
     #pool = multiprocessing.Pool()
